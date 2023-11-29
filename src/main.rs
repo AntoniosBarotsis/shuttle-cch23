@@ -1,3 +1,5 @@
+pub mod days;
+
 use axum::{http::StatusCode, routing::get, Router};
 
 async fn hello_world() -> &'static str {
@@ -13,7 +15,8 @@ async fn internal_server_error() -> StatusCode {
 async fn main() -> shuttle_axum::ShuttleAxum {
   let router = Router::new()
     .route("/", get(hello_world))
-    .route("/-1/error", get(internal_server_error));
+    .route("/-1/error", get(internal_server_error))
+    .merge(days::day_00::get_routes());
 
   Ok(router.into())
 }
