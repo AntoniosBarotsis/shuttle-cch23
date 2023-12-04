@@ -209,6 +209,7 @@ name = "cch23-tony"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "serde",
  "shuttle-axum",
  "shuttle-runtime",
  "tokio",
