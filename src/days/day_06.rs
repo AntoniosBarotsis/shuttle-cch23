@@ -30,7 +30,15 @@ struct ElfCount {
 
 async fn task(payload: String) -> Json<ElfCount> {
   let count = payload.matches("elf").count();
-  let on_shelf = payload.matches("elf on a shelf").count();
+
+  let search = b"elf on a shelf";
+
+  let on_shelf = payload
+    .as_bytes()
+    .windows(search.len())
+    .filter(|el| el == search)
+    .count();
+
   let no_shelf = payload.matches("shelf").count() - on_shelf;
 
   Json(ElfCount {
