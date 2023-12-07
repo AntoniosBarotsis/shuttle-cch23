@@ -208,11 +208,15 @@ dependencies = [
 name = "cch23-tony"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
+ "base64",
  "serde",
+ "serde_json",
  "shuttle-axum",
  "shuttle-runtime",
  "tokio",
+ "tower",
  "tracing",
 ]
 
