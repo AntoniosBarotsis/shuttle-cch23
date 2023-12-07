@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used)]
-
 use std::collections::HashMap;
 
 use axum::{
@@ -31,6 +29,7 @@ async fn handle_anyhow_error(err: anyhow::Error) -> (StatusCode, String) {
   )
 }
 
+#[allow(clippy::unwrap_used)]
 async fn task_1(headers: HeaderMap) -> String {
   let cookie = &headers
     .get("cookie")
