@@ -1,8 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
-use std::{string::FromUtf8Error, collections::HashMap};
+use std::collections::HashMap;
 
-use anyhow::anyhow;
 use axum::{
   body::Body,
   error_handling::HandleError,
@@ -46,8 +45,8 @@ async fn task_1(headers: HeaderMap) -> String {
 
 #[derive(Debug, serde::Deserialize)]
 struct CookieData {
-  recipe: Ingredients,
-  pantry: Ingredients,
+  recipe: HashMap<String, u64>,
+  pantry: HashMap<String, u64>,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -67,92 +66,38 @@ struct CookieResponse {
   pantry: Ingredients,
 }
 
-async fn task_2(headers: &HeaderMap) -> Result<Json<CookieResponse>, anyhow::Error> {
+fn parse_cookie<T: for<'a> serde::Deserialize<'a>>(
+  headers: &HeaderMap,
+) -> Result<T, anyhow::Error> {
   let cookie = &headers.get("cookie").expect("Cookie not found").to_str()?["result=".len()..];
-
   let decoded = general_purpose::STANDARD.decode(cookie)?;
+  let data: &str = std::str::from_utf8(&decoded)?;
+  let parsed: T = serde_json::from_str(data)?;
 
-  let data = String::from_utf8(decoded)?;
-
-  let mut parsed: CookieData = serde_json::from_str(&data)?;
-
-  let mut cookies = 0;
-  loop {
-    let flour = parsed.recipe.flour < parsed.pantry.flour;
-    let sugar = parsed.recipe.sugar < parsed.pantry.sugar;
-    let butter = parsed.recipe.butter < parsed.pantry.butter;
-    let baking_powder = parsed.recipe.baking_powder < parsed.pantry.baking_powder;
-    let chocolate_chips = parsed.recipe.chocolate_chips < parsed.pantry.chocolate_chips;
-
-    if flour && sugar && butter && baking_powder && chocolate_chips {
-      cookies += 1;
-
-      parsed.pantry.flour -= parsed.recipe.flour;
-      parsed.pantry.sugar -= parsed.recipe.sugar;
-      parsed.pantry.butter -= parsed.recipe.butter;
-      parsed.pantry.baking_powder -= parsed.recipe.baking_powder;
-      parsed.pantry.chocolate_chips -= parsed.recipe.chocolate_chips;
-    } else {
-      break;
-    }
-  }
-
-  Ok(Json(CookieResponse {
-    cookies,
-    pantry: parsed.pantry,
-  }))
+  Ok(parsed)
 }
 
 async fn task_3(headers: &HeaderMap) -> Result<Json<Value>, anyhow::Error> {
-  let cookie = &headers.get("cookie").expect("Cookie not found").to_str()?["result=".len()..];
-  let decoded = general_purpose::STANDARD.decode(cookie)?;
-  let data = String::from_utf8(decoded)?;
-  let parsed: Value = serde_json::from_str(&data)?;
+  let parsed = parse_cookie::<CookieData>(headers)?;
 
-  if let (Some(Value::Object(recipe)), Some(Value::Object(pantry))) =
-    (parsed.get("recipe"), parsed.get("pantry"))
-  {
-    let mut cookies = 0;
+  let recipe = parsed.recipe;
+  let mut pantry = parsed.pantry;
 
-    let mut pantry = pantry.clone();
-
-    loop {
-      let all_valid = recipe.iter().all(|(recipe_key, recipe_value)| {
-        pantry
-          .get(recipe_key)
-          .map_or(false, |pantry_value| match (recipe_value, pantry_value) {
-            (Value::Number(recipe_amt), Value::Number(pantry_amt)) => {
-              pantry_amt.as_f64() > recipe_amt.as_f64()
-            }
-            _ => false,
-          })
-      });
-
-      if all_valid {
-        cookies += 1;
-
-        recipe.iter().for_each(|(recipe_key, recipe_value)| {
-          let pantry_value = pantry.get_mut(recipe_key).unwrap();
-
-          if let (Value::Number(recipe_amt), Value::Number(pantry_amt)) =
-            (recipe_value, &pantry_value)
-          {
-            *pantry_value =
-              Value::Number((pantry_amt.as_i64().unwrap() - recipe_amt.as_i64().unwrap()).into());
-          }
-        });
-      } else {
-        break;
-      }
-    }
-
-    let res = json!({
-      "cookies": cookies,
-      "pantry": pantry
+  let cookies = recipe
+    .iter()
+    .fold(u64::MAX, |cookies, (ingredient, needed)| {
+      let available = pantry.get(ingredient).unwrap_or(&0);
+      cookies.min(available / needed)
     });
 
-    return Ok(Json(res));
+  for (key, pantry_value) in &mut pantry {
+    *pantry_value -= cookies * recipe.get(key).unwrap_or(&0u64);
   }
 
-  Err(anyhow!("Both `recipe` and `pantry` need to be present."))
+  let res = json!({
+    "cookies": cookies,
+    "pantry": pantry
+  });
+
+  Ok(Json(res))
 }
