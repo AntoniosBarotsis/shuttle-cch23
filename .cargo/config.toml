@@ -119,5 +119,5 @@ rustflags = [
     "-Wclippy::needless_pass_by_value",
     "-Wclippy::similar_names",
     "-Wclippy::uninlined_format_args",
-    "-Wclippy::unwrap_or_else_default",
+    "-Wclippy::unwrap_or_default",
 ]
