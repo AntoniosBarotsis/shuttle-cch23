@@ -86,7 +86,7 @@ async fn task_3(headers: &HeaderMap) -> Result<Json<Value>, anyhow::Error> {
     .iter()
     .fold(u64::MAX, |cookies, (ingredient, needed)| {
       let available = pantry.get(ingredient).unwrap_or(&0);
-      cookies.min(available / needed)
+      cookies.min(available.checked_div(*needed).unwrap_or(u64::MAX))
     });
 
   for (key, pantry_value) in &mut pantry {

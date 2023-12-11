@@ -10,7 +10,7 @@ pub fn get_routes() -> Router {
     .route("/8/drop/:id", get(task_2))
 }
 
-async fn get_weight(id: u32) -> Result<u64, AppError> {
+async fn get_weight(id: u32) -> Result<f64, AppError> {
   let res = ureq::get(&format!("https://pokeapi.co/api/v2/pokemon/{id}"))
     .call()?
     .into_string()?;
@@ -21,7 +21,7 @@ async fn get_weight(id: u32) -> Result<u64, AppError> {
     .get("weight")
     .ok_or_else(|| anyhow!("Weight not found"))?
     .as_number()
-    .and_then(serde_json::Number::as_u64)
+    .and_then(serde_json::Number::as_f64)
     .ok_or_else(|| anyhow!("Weight not a number"))?;
 
   Ok(weight)
@@ -30,7 +30,7 @@ async fn get_weight(id: u32) -> Result<u64, AppError> {
 async fn task_1(Path(id): Path<u32>) -> Result<String, AppError> {
   let weight = get_weight(id).await?;
 
-  let weight_kg = weight / 10;
+  let weight_kg = weight / 10.0;
 
   Ok(weight_kg.to_string())
 }
@@ -38,10 +38,10 @@ async fn task_1(Path(id): Path<u32>) -> Result<String, AppError> {
 async fn task_2(Path(id): Path<u32>) -> Result<String, AppError> {
   let weight = get_weight(id).await?;
 
-  let weight_kg = weight / 10;
+  let weight_kg = weight / 10.0;
 
   #[allow(clippy::cast_precision_loss)]
-  let res = (2.0f64 * 9.825 * 10.0).sqrt() * (weight_kg as f64);
+  let res = (2.0f64 * 9.825 * 10.0).sqrt() * weight_kg;
 
   Ok(res.to_string())
 }
