@@ -6,7 +6,7 @@ use axum::{
   routing::{get, post},
   Router,
 };
-use image::{io::Reader as ImageReader, GenericImageView};
+use image::{io::Reader as ImageReader, GenericImageView, Rgba};
 use std::io::Cursor;
 use tokio_util::io::ReaderStream;
 
@@ -40,7 +40,8 @@ async fn task_1() -> impl IntoResponse {
 async fn task_2(mut multipart: Multipart) -> Result<String, AppError> {
   let mut reds = 0u64;
 
-  while let Some(field) = multipart.next_field().await? {
+  // No need for a while since there's only 1 image/field
+  if let Some(field) = multipart.next_field().await? {
     let data = field.bytes().await?;
 
     let img = ImageReader::new(Cursor::new(&data))
@@ -49,13 +50,7 @@ async fn task_2(mut multipart: Multipart) -> Result<String, AppError> {
 
     let count = img
       .pixels()
-      .map(|(_i, _j, v)| {
-        let r = u16::from(v.0[0]);
-        let g = u16::from(v.0[1]);
-        let b = u16::from(v.0[2]);
-
-        u64::from(r > g + b)
-      })
+      .map(|(_i, _j, Rgba([r, g, b, _]))| u64::from(r > g.saturating_add(b)))
       .sum::<u64>();
 
     reds += count;
