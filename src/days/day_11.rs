@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use axum::{
   extract::Multipart,
   http::header,
@@ -5,9 +6,11 @@ use axum::{
   routing::{get, post},
   Router,
 };
-use anyhow::anyhow;
 use image::{io::Reader as ImageReader, GenericImageView, Rgba};
-use std::{io::{Cursor, Read}, fs::File};
+use std::{
+  fs::File,
+  io::{Cursor, Read},
+};
 
 use super::AppError;
 
