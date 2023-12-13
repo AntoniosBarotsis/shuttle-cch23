@@ -8,7 +8,7 @@ axum = { version = "0.6.18", features = ["multipart"] }
 shuttle-axum = "0.35.1"
 shuttle-runtime = "0.35.1"
 shuttle-shared-db = { version = "0.35.1", features = ["postgres"] }
-sqlx = { version = "0.7.3", features = ["postgres"] }
+sqlx = { version = "0.7.3", features = ["postgres", "macros"] }
 tokio = "1.28.2"
 anyhow = "1.0.75"
 base64 = "0.21.5"

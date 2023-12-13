@@ -3,6 +3,7 @@
 pub mod days;
 
 use axum::{http::StatusCode, routing::get, Router};
+use sqlx::PgPool;
 
 async fn hello_world() -> &'static str {
   "Hello, world!"
@@ -14,7 +15,7 @@ async fn internal_server_error() -> StatusCode {
 
 #[allow(clippy::unused_async)]
 #[shuttle_runtime::main]
-async fn main() -> shuttle_axum::ShuttleAxum {
+async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
   let router = Router::new()
     .route("/", get(hello_world))
     .route("/-1/error", get(internal_server_error))
@@ -24,7 +25,8 @@ async fn main() -> shuttle_axum::ShuttleAxum {
     .merge(days::day_07::get_routes())
     .merge(days::day_08::get_routes())
     .merge(days::day_11::get_routes())
-    .merge(days::day_12::get_routes());
+    .merge(days::day_12::get_routes())
+    .merge(days::day_13::get_routes(pool));
 
   Ok(router.into())
 }
