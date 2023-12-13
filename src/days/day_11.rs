@@ -1,14 +1,13 @@
 use axum::{
-  body::StreamBody,
   extract::Multipart,
-  http::{header, StatusCode},
+  http::header,
   response::IntoResponse,
   routing::{get, post},
   Router,
 };
+use anyhow::anyhow;
 use image::{io::Reader as ImageReader, GenericImageView, Rgba};
-use std::io::Cursor;
-use tokio_util::io::ReaderStream;
+use std::{io::{Cursor, Read}, fs::File};
 
 use super::AppError;
 
@@ -18,23 +17,23 @@ pub fn get_routes() -> Router {
     .route("/11/red_pixels", post(task_2))
 }
 
-async fn task_1() -> impl IntoResponse {
-  let file = match tokio::fs::File::open("assets/decoration.png").await {
+async fn task_1() -> Result<impl IntoResponse, AppError> {
+  let mut file = match File::open("assets/decoration.png") {
     Ok(file) => file,
-    Err(err) => return Err((StatusCode::NOT_FOUND, format!("File not found: {err}"))),
+    Err(err) => return Err(anyhow!("File not found: {err}"))?,
   };
 
-  let length = &file.metadata().await.expect("file length").len();
-
-  let stream = ReaderStream::new(file);
-  let body = StreamBody::new(stream);
+  let length = &file.metadata().expect("file length").len();
+  let mut buffer = Vec::new();
+  // read the whole file
+  file.read_to_end(&mut buffer)?;
 
   let headers = [
     (header::CONTENT_TYPE, String::from("image/png")),
     (header::CONTENT_LENGTH, length.to_string()),
   ];
 
-  Ok((headers, body))
+  Ok((headers, buffer))
 }
 
 async fn task_2(mut multipart: Multipart) -> Result<String, AppError> {
