@@ -16,6 +16,11 @@ async fn internal_server_error() -> StatusCode {
 #[allow(clippy::unused_async)]
 #[shuttle_runtime::main]
 async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
+  sqlx::migrate!("./migrations/")
+    .run(&pool)
+    .await
+    .expect("Error running DB migrations");
+
   let router = Router::new()
     .route("/", get(hello_world))
     .route("/-1/error", get(internal_server_error))
