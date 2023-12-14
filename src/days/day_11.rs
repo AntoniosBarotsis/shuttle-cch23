@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use axum::{
   extract::Multipart,
   http::header,
@@ -7,10 +6,7 @@ use axum::{
   Router,
 };
 use image::{io::Reader as ImageReader, GenericImageView, Rgba};
-use std::{
-  fs::File,
-  io::{Cursor, Read},
-};
+use std::{io::Cursor, fs};
 
 use super::AppError;
 
@@ -21,15 +17,8 @@ pub fn get_routes() -> Router {
 }
 
 async fn task_1() -> Result<impl IntoResponse, AppError> {
-  let mut file = match File::open("assets/decoration.png") {
-    Ok(file) => file,
-    Err(err) => return Err(anyhow!("File not found: {err}"))?,
-  };
-
-  let length = &file.metadata().expect("file length").len();
-  let mut buffer = Vec::new();
-  // read the whole file
-  file.read_to_end(&mut buffer)?;
+  let buffer = fs::read("assets/decoration.png")?;
+  let length = buffer.len();
 
   let headers = [
     (header::CONTENT_TYPE, String::from("image/png")),
