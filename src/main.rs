@@ -15,7 +15,12 @@ async fn internal_server_error() -> StatusCode {
 
 #[allow(clippy::unused_async)]
 #[shuttle_runtime::main]
-async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
+async fn main(
+  #[shuttle_shared_db::Postgres(
+    local_uri = "postgres://postgres:postgres@localhost:5432/postgres"
+  )]
+  pool: PgPool,
+) -> shuttle_axum::ShuttleAxum {
   sqlx::migrate!("./migrations/")
     .run(&pool)
     .await
@@ -31,7 +36,8 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::Shut
     .merge(days::day_08::get_routes())
     .merge(days::day_11::get_routes())
     .merge(days::day_12::get_routes())
-    .merge(days::day_13::get_routes(pool));
+    .merge(days::day_13::get_routes(pool))
+    .merge(days::day_14::get_routes());
 
   Ok(router.into())
 }
