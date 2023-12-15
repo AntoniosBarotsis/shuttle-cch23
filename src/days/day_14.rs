@@ -4,9 +4,6 @@ pub fn get_routes() -> Router {
   Router::new()
     .route("/14/unsafe", post(unsafe_render))
     .route("/14/safe", post(safe_render))
-  // .route("/13/orders", post(insert))
-  // .route("/13/orders/total", get(total))
-  // .route("/13/orders/popular", get(popular))
 }
 
 #[derive(serde::Deserialize, Debug)]
