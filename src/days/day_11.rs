@@ -6,7 +6,7 @@ use axum::{
   Router,
 };
 use image::{io::Reader as ImageReader, GenericImageView, Rgba};
-use std::{io::Cursor, fs};
+use std::{fs, io::Cursor};
 
 use super::AppError;
 
