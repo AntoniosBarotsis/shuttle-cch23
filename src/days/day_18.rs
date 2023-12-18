@@ -146,7 +146,7 @@ async fn best(
   let mut tmp = BTreeMap::<String, Vec<String>>::new();
 
   for el in res {
-    let list = tmp
+    let _ = tmp
       .entry(el.region)
       .and_modify(|e| {
         if e.len() < number {
@@ -155,13 +155,11 @@ async fn best(
           }
         }
       })
-      .or_default();
-
-    if list.is_empty() && list.len() < number {
-      if let Some(gift_name) = el.gift_name.clone() {
-        list.push(gift_name);
-      }
-    }
+      .or_insert_with(|| {
+        el.gift_name
+          .and_then(|el| if number > 0 { Some(el) } else { None })
+          .map_or_else(Vec::new, |gift_name| vec![gift_name])
+      });
   }
 
   let res = tmp
