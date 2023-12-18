@@ -26,8 +26,8 @@ pub fn get_routes(pool: PgPool) -> Router {
 }
 
 #[derive(Clone)]
-struct MyState {
-  pool: PgPool,
+pub(crate) struct MyState {
+  pub(crate) pool: PgPool,
 }
 
 async fn task_1(State(state): State<MyState>) -> Result<String, AppError> {
@@ -61,14 +61,14 @@ async fn reset(State(state): State<MyState>) -> Result<(), AppError> {
 }
 
 #[derive(Deserialize, Debug)]
-struct Order {
+pub(crate) struct Order {
   id: i32,
   region_id: i32,
   gift_name: String,
   quantity: i32,
 }
 
-async fn insert(
+pub(crate) async fn insert(
   State(state): State<MyState>,
   Json(payload): Json<Vec<Order>>,
 ) -> Result<impl IntoResponse, AppError> {
