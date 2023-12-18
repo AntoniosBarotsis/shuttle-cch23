@@ -84,7 +84,6 @@ async fn insert_region(
   State(state): State<MyState>,
   Json(payload): Json<Vec<Region>>,
 ) -> Result<impl IntoResponse, AppError> {
-  // dbg!(&payload);
   for el in payload {
     let _ = sqlx::query!(
       "INSERT INTO regions (id, name) VALUES ($1, $2)",
