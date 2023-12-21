@@ -37,6 +37,7 @@ async fn main(
     .route("/-1/error", get(internal_server_error))
     .merge(days::day_01::get_routes())
     .merge(days::day_04::get_routes())
+    .merge(days::day_05::get_routes())
     .merge(days::day_06::get_routes())
     .merge(days::day_07::get_routes())
     .merge(days::day_08::get_routes())
