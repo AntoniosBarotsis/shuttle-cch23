@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use axum::{body::Bytes, routing::post, Router};
 use git2::{BranchType, Repository, Signature};
 use std::{
@@ -66,8 +67,7 @@ async fn cookie(file: Bytes) -> Result<String, AppError> {
   let branch = repo.find_branch(BRANCH_NAME, BranchType::Local)?;
   let mut commit = branch.get().peel_to_commit()?;
 
-  let mut res = None::<String>;
-  'outer: while let Ok(tree) = commit.tree() {
+  while let Ok(tree) = commit.tree() {
     let diff = repo.diff_tree_to_tree(None, Some(&tree), None)?;
 
     let paths = diff
@@ -89,8 +89,8 @@ async fn cookie(file: Bytes) -> Result<String, AppError> {
           let sha = commit.id();
 
           info!("{}, {:?}", author.name().unwrap(), sha);
-          res = format!("{} {:?}", author.name().unwrap(), sha).into();
-          break 'outer;
+
+          return Ok(format!("{} {:?}", author.name().unwrap(), sha));
         }
       } else {
         warn!("File could not be read");
@@ -104,5 +104,5 @@ async fn cookie(file: Bytes) -> Result<String, AppError> {
     }
   }
 
-  Ok(res.unwrap())
+  Err(anyhow!("Not found"))?
 }
