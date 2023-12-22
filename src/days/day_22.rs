@@ -11,17 +11,12 @@ pub fn get_routes() -> Router {
 }
 
 async fn task_1(payload: String) -> Result<String, AppError> {
-  let lines = payload
+  let num = payload
     .lines()
     .map(|el| str::parse::<u64>(el).expect("Parse"))
-    .collect::<Vec<_>>();
+    .fold(0u64, |acc, el| acc ^ el);
 
-  let mut carry = 0;
-  for num in lines {
-    carry ^= num;
-  }
-
-  Ok("🎁".repeat(usize::try_from(carry)?))
+  Ok("🎁".repeat(usize::try_from(num)?))
 }
 
 #[allow(clippy::unwrap_used)]
